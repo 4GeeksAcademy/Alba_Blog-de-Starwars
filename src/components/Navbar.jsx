@@ -1,25 +1,109 @@
 import { Link } from "react-router-dom";
+import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 
 export const Navbar = () => {
+	const { store, dispatch } = useGlobalReducer()
+	const [search, setSearch] = useState("");
+	const navigate = useNavigate();
+
+	const allItems = [
+		...store.people.map(i => ({ ...i, type: "character" })),
+		...store.planets.map(i => ({ ...i, type: "planets" })),
+		...store.vehicles.map(i => ({ ...i, type: "vehicles" }))
+	];
+
+	const filtered = allItems.filter(item =>
+		item.name.toLowerCase().includes(search.toLowerCase())
+	);
+
 
 	return (
-		<nav className="navbar navbar-light bg-light">
+		<nav className="navbar bg-body-tertiary">
 			<div className="container">
 				<Link to="/">
-					<span className="navbar-brand mb-0 h1">React Boilerplate</span>
+					<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxu3dgPb2v4ezDM91oP68dvhKD2WjCYVEpsw&s" alt="Starwars" width="150" />
 				</Link>
-				<div className="ml-auto">
-					<Link to="/demo">
-						<button className="btn btn-primary">Check the Context in action</button>
-					</Link>
 
-					<Link to="/starwars">
-						<button className="btn btn-danger">Starwars</button>
-					</Link>
 
+				<div className="position-relative" style={{ width: "300px" }}>
+
+				
+					<div className="input-group mb-3">
+						<span className="input-group-text">
+							<i className="fas fa-search"></i>
+						</span>
+
+						<input
+							type="text"
+							className="form-control"
+							placeholder="Search..."
+							value={search}
+							onChange={(e) => setSearch(e.target.value)}
+						/>
+					</div>
+
+					{search && (
+						<ul className="list-group position-absolute w-100">
+							{filtered.slice(0, 5).map(item => (
+								<li
+									key={item.uid}
+									className="list-group-item list-group-item-action"
+									onClick={() => {
+										navigate(`/${item.type}/${item.uid}`);
+										setSearch("");
+									}}
+									style={{ cursor: "pointer" }}
+								>
+									{item.name}
+								</li>
+							))}
+						</ul>
+					)}
 
 				</div>
+
+				<div className="dropdown">
+
+					<button
+						className="btn btn-primary dropdown-toggle"
+						data-bs-toggle="dropdown"
+					>Favorites ({store.favorites.length})
+					</button>
+					<ul className="dropdown-menu">
+
+						{store.favorites.length === 0 ? (
+							<li className="dropdown-item text-muted">
+								No favorites yet
+							</li>
+						) : (
+							store.favorites.map((fav, index) => (
+								<li
+									key={index}
+									className="dropdown-item d-flex justify-content-between align-items-center"
+								>{fav}
+
+									<button
+										className="btn"
+										onClick={() =>
+											dispatch({
+												type: "remove_favorite",
+												payload: fav
+											})
+										}
+									>
+										<i className="fas fa-trash"></i>
+									</button>
+								</li>
+							))
+						)}
+
+					</ul>
+				</div>
 			</div>
+
 		</nav>
-	);
-};
+	)
+}
