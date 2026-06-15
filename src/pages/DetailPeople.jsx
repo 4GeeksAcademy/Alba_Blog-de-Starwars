@@ -1,7 +1,6 @@
-import { Link } from "react-router-dom";
 import { useParams } from "react-router-dom"
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 
 
 export const DetailPeople = () => {
@@ -10,53 +9,37 @@ export const DetailPeople = () => {
 
     const { uid } = useParams()
 
-    const [people, setpeople] = React.useState(null)
-
-    function detallepeople() {
+    function detallePersonaje() {
         fetch("https://www.swapi.tech/api/people/" + uid)
             .then(res => res.json())
-            .then(data => setpeople(data.result.properties))
+            .then(data => console.log(data.result.properties))
             .catch(err => console.error(err))
     }
 
-    useEffect(() => {
-        detallepeople()
+useEffect(() => {
+        detallePersonaje()
 
-    }, [uid])
+    },[uid])
 
-    if (!people) return <p>Loading...</p>
 
 
     return (
-        <div className="container d-flex justify-content-center flex-column align-items-center" style={{ minHeight: "80vh" }}>
+        <div className="container">
 
-            <div className="card" style={{ width: "600px" }}>
-                <img
-                    src={`https://raw.githubusercontent.com/breatheco-de/swapi-images/master/public/images/people/${uid}.jpg`}
-                    className="card-img-top"
-                    alt={people.name}
-                    style={{
-                        height: "450px",
-                       
-                        objectFit: "contain"
-                    }}
-                />
+            <div className="card" style={{ width: "18rem;" }}>
+                <img src="..." className="card-img-top" alt="..." />
                 <div className="card-body">
-                    <h5 className="card-title">{people.name}</h5>
-                    <p className="card-text">Gender: {people.gender}</p>
+                    <h5 className="card-title">Card title</h5>
+                    <p className="card-text">Some quick example text to build on the card title and make up the bulk of the card’s content.</p>
                 </div>
                 <ul className="list-group list-group-flush">
-                    <li className="list-group-item">Height: {people.height}</li>
-                    <li className="list-group-item">Mass: {people.mass}</li>
-                    <li className="list-group-item">Hair color: {people.hair_color}</li>
-                    <li className="list-group-item">Eye color: {people.eye_color}</li>
+                    <li className="list-group-item">An item</li>
+                    <li className="list-group-item">A second item</li>
+                    <li className="list-group-item">A third item</li>
                 </ul>
 
-
             </div>
-            <Link to="/">
-                <button className="btn btn-primary mt-5">Back home</button>
-            </Link>
+
         </div>
     );
 }; 
