@@ -1,60 +1,83 @@
-import { Link } from "react-router-dom";
-import useGlobalReducer from "../hooks/useGlobalReducer";  // Custom hook for accessing the global state.
-import { CardPeople } from "../components/CardPeople.jsx";
-import React, { useEffect } from "react"
+import React, { useEffect } from "react";
+import useGlobalReducer from "../hooks/useGlobalReducer";
+import { StarWarsCard } from "../components/StarWarsCard";
 
+const SECTIONS = [
+	{ type: "people", storeKey: "people", label: "PERSONAJES", endpoint: "people" },
+	{ type: "planets", storeKey: "planets", label: "PLANETAS", endpoint: "planets" },
+	{ type: "vehicles", storeKey: "vehicles", label: "VEHÍCULOS", endpoint: "vehicles" },
+];
 
 export const Starwars = () => {
-    // Access the global state and dispatch function using the useGlobalReducer hook.
-    const { store, dispatch } = useGlobalReducer()
+	const { store, dispatch } = useGlobalReducer();
 
-    async function cartaPersonajes() {
-        try {
-            const response = await fetch("https://www.swapi.tech/api/people/");
-            if (!response.ok) {
-                throw new Error(`Error al obtener peronajes: ${response.statusText}`)
-            }
-            const data = await response.json()
-            const personajesBasicos = data.results;
-            dispatch({
-                type: "set_personajes",
-                payload: { personaje: personajesBasicos }
-            })
+	useEffect(() => {
+		SECTIONS.forEach(({ type, storeKey, endpoint }) => {
+			if (store[storeKey]?.length > 0) return;
+			loadSection(type, endpoint);
+		});
+	}, [store]);
 
-        } catch (error) {
-            console.error("Error en cargar personajes:", error)
-        }
-    }
+	async function loadSection(type, endpoint) {
+		try {
+			dispatch({ type: "set_loading", payload: { type, value: true } });
 
+			const res = await fetch(
+				`https://www.swapi.tech/api/${endpoint}/?page=1&limit=12`
+			);
 
-    useEffect(() => {
-        cartaPersonajes()
+			if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    })
+			const data = await res.json();
 
+			dispatch({
+				type: `set_${type}`,
+				payload: data.results || [],
+			});
+		} catch (err) {
+			console.error(`Error al cargar ${type}:`, err);
+		} finally {
+			dispatch({ type: "set_loading", payload: { type, value: false } });
+		}
+	}
 
-    return (
-        <div className="container">
-            <h2>Starwars </h2>
-            <h3>People</h3>
-            <div className= "d-flex" style={{overflow: "auto"}}>
-                {store.character?.map((value, index) => {
-                    return (
-                        <CardPeople key={index} people={value} />
-                    )
-                })}
+	return (
+		<>
+			{SECTIONS.map(({ type, storeKey, label }) => (
+				<section key={type} style={{ marginBottom: "48px" }}>
+					<div className="sw-section-head">
+						<span className="sw-section-title">{label}</span>
+						<div className="sw-section-line" />
+					</div>
 
-            </div>
+					{store.loading?.[type] && (
+						<div
+							style={{
+								display: "flex",
+								alignItems: "center",
+								gap: "12px",
+								padding: "32px 0",
+							}}
+						>
+							<span className="sw-spinner" />
+							<span
+								className="sw-font-display sw-text-muted"
+								style={{ fontSize: ".6rem", letterSpacing: "2px" }}
+							>
+								CARGANDO {label}...
+							</span>
+						</div>
+					)}
 
-            <h3>Planets</h3>
-            {/* <componente_carta_planets/> */}
-            <h3>Vehicles</h3>
-            {/* <componente_carta_vehicles/> */}
-
-
-            <Link to="/">
-                <button className="btn btn-primary">Back home</button>
-            </Link>
-        </div>
-    );
+					{!store.loading?.[type] && (
+						<div className="sw-cards-row">
+							{store[storeKey]?.map((item) => (
+                           <StarWarsCard key={item.uid} item={item} type={type} />
+                            ))}
+						</div>
+					)}
+				</section>
+			))}
+		</>
+	);
 };
